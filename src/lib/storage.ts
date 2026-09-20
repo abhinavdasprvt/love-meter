@@ -3,7 +3,7 @@ import { supabase, isSupabaseConfigured } from "./supabase";
 
 const LOCAL_STORAGE_KEY = "trupti_love_updates_v2";
 
-// Default seed data with realistic decimal percentages starting with Yesterday: 78%
+// Default seed data with realistic percentage starting with 78%
 const SEED_DATA: LoveUpdate[] = [
   {
     id: "seed-yesterday",
@@ -11,13 +11,6 @@ const SEED_DATA: LoveUpdate[] = [
     message: "You made my whole day brighter ✨",
     created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "seed-2days",
-    percentage: 74.5,
-    message: "Loved listening to your playlist together 🎧",
-    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ];
 
@@ -67,6 +60,34 @@ export function getTodayUpdate(updates: LoveUpdate[]): LoveUpdate | null {
 }
 
 export async function fetchAllUpdates(): Promise<LoveUpdate[]> {
+  // 1. Try server API route first (bulletproof, bypasses browser tracking/ad-blockers)
+  if (typeof window !== "undefined") {
+    try {
+      const res = await fetch("/api/updates", { cache: "no-store" });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          if (json.data.length > 0) {
+            saveLocalData(json.data);
+            return json.data;
+          } else {
+            const wasCleared =
+              localStorage.getItem("trupti_history_cleared") === "true";
+            const localRaw = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (wasCleared || localRaw !== null) {
+              saveLocalData([]);
+              return [];
+            }
+            return SEED_DATA;
+          }
+        }
+      }
+    } catch (apiErr) {
+      console.warn("Fetch /api/updates error, falling back:", apiErr);
+    }
+  }
+
+  // 2. Direct Supabase client fallback
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
@@ -74,19 +95,18 @@ export async function fetchAllUpdates(): Promise<LoveUpdate[]> {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.warn("Supabase fetch failed, falling back to local:", error);
-        return getLocalData();
-      }
-
-      if (Array.isArray(data)) {
+      if (!error && Array.isArray(data)) {
         if (data.length > 0) {
           saveLocalData(data as LoveUpdate[]);
           return data as LoveUpdate[];
         } else {
-          // Table in Supabase is empty (e.g. cleared by admin or freshly deleted)
-          const wasCleared = typeof window !== "undefined" && localStorage.getItem("trupti_history_cleared") === "true";
-          const localRaw = typeof window !== "undefined" ? localStorage.getItem(LOCAL_STORAGE_KEY) : null;
+          const wasCleared =
+            typeof window !== "undefined" &&
+            localStorage.getItem("trupti_history_cleared") === "true";
+          const localRaw =
+            typeof window !== "undefined"
+              ? localStorage.getItem(LOCAL_STORAGE_KEY)
+              : null;
           if (wasCleared || localRaw !== null) {
             saveLocalData([]);
             return [];
@@ -95,8 +115,7 @@ export async function fetchAllUpdates(): Promise<LoveUpdate[]> {
         }
       }
     } catch (e) {
-      console.warn("Supabase fetch exception, using local fallback:", e);
-      return getLocalData();
+      console.warn("Direct Supabase fetch exception, using local fallback:", e);
     }
   }
 
@@ -116,30 +135,21 @@ export async function fetchYesterdayUpdate(): Promise<{
   created_at?: string;
 } | null> {
   const updates = await fetchAllUpdates();
-  if (updates.length >= 2) {
+  if (updates.length === 0) return null;
+
+  const today = new Date();
+  const hasToday = isSameDay(new Date(updates[0].created_at), today);
+
+  // If today has been entered, show yesterday/previous entry if present
+  if (hasToday && updates.length >= 2) {
     return {
       percentage: updates[1].percentage,
       message: updates[1].message,
       created_at: updates[1].created_at,
     };
-  } else if (updates.length === 1) {
-    const wasCleared = typeof window !== "undefined" && localStorage.getItem("trupti_history_cleared") === "true";
-    if (wasCleared) return null;
-    return {
-      percentage: 78,
-      message: null,
-      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    };
   }
 
-  const wasCleared = typeof window !== "undefined" && localStorage.getItem("trupti_history_cleared") === "true";
-  if (wasCleared) return null;
-
-  return {
-    percentage: 78,
-    message: null,
-    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-  };
+  return null;
 }
 
 export async function saveLoveUpdate(
@@ -155,7 +165,6 @@ export async function saveLoveUpdate(
     };
   }
 
-  // Round cleanly to 1 decimal place max (e.g. 85.5)
   const val = Math.round(rawNum * 10) / 10;
   const cleanMessage = message?.trim() ? message.trim() : null;
   const now = new Date().toISOString();
@@ -164,13 +173,56 @@ export async function saveLoveUpdate(
     localStorage.removeItem("trupti_history_cleared");
   }
 
-  // 2. If Supabase is active
+  // 2. Primary: Server API route (syncs with Supabase database reliably)
+  if (typeof window !== "undefined") {
+    try {
+      const res = await fetch("/api/updates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ percentage: val, message: cleanMessage }),
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.update) {
+          const savedUpdate: LoveUpdate = json.update;
+
+          // Synchronize immediately to local storage cache
+          const current = getLocalData();
+          const today = new Date();
+          const todayIndex = current.findIndex((u) =>
+            isSameDay(new Date(u.created_at), today)
+          );
+
+          if (todayIndex >= 0) {
+            current[todayIndex] = savedUpdate;
+          } else {
+            current.unshift(savedUpdate);
+          }
+
+          current.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+
+          saveLocalData(current);
+          return { success: true, update: savedUpdate };
+        }
+      }
+    } catch (apiErr) {
+      console.warn("POST /api/updates error, trying direct Supabase client:", apiErr);
+    }
+  }
+
+  // 3. Fallback: Direct Supabase client
   if (isSupabaseConfigured && supabase) {
     try {
       const existingUpdates = await fetchAllUpdates();
       const todayEntry = getTodayUpdate(existingUpdates);
+      const isUuid = (id?: string) =>
+        Boolean(id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
 
-      if (todayEntry) {
+      if (todayEntry && isUuid(todayEntry.id)) {
         const { data, error } = await supabase
           .from("love_updates")
           .update({
@@ -182,8 +234,14 @@ export async function saveLoveUpdate(
           .select()
           .single();
 
-        if (error) throw error;
-        return { success: true, update: data as LoveUpdate };
+        if (!error && data) {
+          const current = getLocalData();
+          const idx = current.findIndex((u) => u.id === data.id);
+          if (idx >= 0) current[idx] = data as LoveUpdate;
+          else current.unshift(data as LoveUpdate);
+          saveLocalData(current);
+          return { success: true, update: data as LoveUpdate };
+        }
       } else {
         const { data, error } = await supabase
           .from("love_updates")
@@ -196,19 +254,25 @@ export async function saveLoveUpdate(
           .select()
           .single();
 
-        if (error) throw error;
-        return { success: true, update: data as LoveUpdate };
+        if (!error && data) {
+          const current = getLocalData();
+          current.unshift(data as LoveUpdate);
+          saveLocalData(current);
+          return { success: true, update: data as LoveUpdate };
+        }
       }
     } catch (e: any) {
-      console.warn("Supabase save error, writing to local fallback:", e);
+      console.warn("Direct Supabase save error, writing to local fallback:", e);
     }
   }
 
-  // 3. LocalStorage persistence
+  // 4. Offline LocalStorage fallback
   try {
     const current = getLocalData();
     const today = new Date();
-    const todayIndex = current.findIndex((u) => isSameDay(new Date(u.created_at), today));
+    const todayIndex = current.findIndex((u) =>
+      isSameDay(new Date(u.created_at), today)
+    );
 
     let updatedItem: LoveUpdate;
 

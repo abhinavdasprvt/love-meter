@@ -32,9 +32,9 @@ CREATE POLICY "Allow update access to love_updates"
     USING (true)
     WITH CHECK (percentage >= 0 AND percentage <= 100);
 
--- Initial Seed Data with decimals for Trupti
+-- Initial Seed Data: starting baseline 78%
 INSERT INTO public.love_updates (percentage, message, created_at, updated_at)
 VALUES 
-    (74.5, 'You brought me coffee today ☕', NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days'),
-    (82.3, 'Loved listening to music together ✨', NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day')
+    (78, 'You made my whole day brighter ✨', NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day')
 ON CONFLICT DO NOTHING;
+

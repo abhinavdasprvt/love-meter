@@ -312,7 +312,7 @@ export default function HomePage() {
             }}
             className="hover:text-[#242124] tracking-wide py-1 text-[11px] opacity-70 hover:opacity-100 transition-all cursor-pointer"
           >
-            Admin (0609)
+            Admin
           </button>
         </div>
       </motion.div>

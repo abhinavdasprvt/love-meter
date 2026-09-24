@@ -119,14 +119,14 @@ export default function AuthModal({
   const titleText = isAbhinav
     ? "Enter Abhinav's Passcode 💙"
     : isAdmin
-    ? "Admin Passcode (0609) 🔒"
+    ? "Admin Access 🔒"
     : "Enter Trupti's Passcode 🌸";
 
   const subtitleText = isAbhinav
-    ? "Abhinav's secret 4-digit code (2305) ♡"
+    ? "Enter your secret 4-digit code ♡"
     : isAdmin
-    ? "Secret admin dashboard pass ♡"
-    : "A special 4-digit code (1603) ♡";
+    ? "Enter administrator passcode ♡"
+    : "Enter your secret 4-digit code ♡";
 
   return (
     <AnimatePresence>

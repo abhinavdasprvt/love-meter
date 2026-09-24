@@ -288,7 +288,7 @@ export interface MaintenanceConfig {
 }
 
 export const DEFAULT_MAINTENANCE_CONFIG: MaintenanceConfig = {
-  enabled: true,
+  enabled: false,
   title: "Polishing Things Up ✨",
   message:
     "We're currently fine-tuning our little love meter to make everything smoother, sweeter, and more magical. We'll be back online very shortly!",

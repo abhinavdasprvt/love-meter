@@ -152,17 +152,33 @@ export async function POST(req: NextRequest) {
 
     if (todayEntry?.id) {
       // Update today's existing row for this person
-      const { data, error } = await client
+      let updatePayload: any = {
+        percentage: val,
+        message: dbMessage,
+        updated_at: nowIso,
+        updated_by: targetUuid,
+        person: targetPerson,
+      };
+
+      let { data, error } = await client
         .from("love_updates")
-        .update({
-          percentage: val,
-          message: dbMessage,
-          updated_at: nowIso,
-          updated_by: targetUuid,
-        })
+        .update(updatePayload)
         .eq("id", todayEntry.id)
         .select()
         .single();
+
+      // If column 'person' doesn't exist yet in Supabase, retry without it
+      if (error && error.message?.includes("person")) {
+        delete updatePayload.person;
+        const retry = await client
+          .from("love_updates")
+          .update(updatePayload)
+          .eq("id", todayEntry.id)
+          .select()
+          .single();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) {
         console.error("Failed to update today entry:", error);
@@ -179,17 +195,32 @@ export async function POST(req: NextRequest) {
       });
     } else {
       // Insert new row for today for this person
-      const { data, error } = await client
+      let insertPayload: any = {
+        percentage: val,
+        message: dbMessage,
+        created_at: nowIso,
+        updated_at: nowIso,
+        updated_by: targetUuid,
+        person: targetPerson,
+      };
+
+      let { data, error } = await client
         .from("love_updates")
-        .insert({
-          percentage: val,
-          message: dbMessage,
-          created_at: nowIso,
-          updated_at: nowIso,
-          updated_by: targetUuid,
-        })
+        .insert(insertPayload)
         .select()
         .single();
+
+      // If column 'person' doesn't exist yet in Supabase, retry without it
+      if (error && error.message?.includes("person")) {
+        delete insertPayload.person;
+        const retry = await client
+          .from("love_updates")
+          .insert(insertPayload)
+          .select()
+          .single();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) {
         console.error("Failed to insert today entry:", error);

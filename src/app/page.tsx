@@ -363,8 +363,8 @@ function HomeContent() {
             </Link>
           )}
 
-          {/* Funny & Love Interactions Widget */}
-          <FunnyInteractions person={activePerson} />
+          {/* Funny & Love Interactions Widget (only on individual views) */}
+          {!isBoth && <FunnyInteractions person={activePerson} />}
         </motion.div>
 
         {/* Right Column (or Stacked on Mobile): LOVE LATELY Graph */}

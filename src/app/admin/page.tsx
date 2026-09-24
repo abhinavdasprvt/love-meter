@@ -16,6 +16,14 @@ import {
   Flame,
   X,
   MessageSquareHeart,
+  Power,
+  Wrench,
+  Sparkles,
+  Clock,
+  CheckCircle2,
+  Edit3,
+  Sliders,
+  ChevronDown,
 } from "lucide-react";
 import {
   fetchAllUpdates,
@@ -24,7 +32,17 @@ import {
   getHistoryStats,
 } from "@/lib/storage";
 import { isAdminAuthenticated, clearAuthenticatedSession, AuthRole } from "@/lib/auth";
-import { LoveUpdate, formatHistoryDate, formatPercentageValue } from "@/types";
+import {
+  LoveUpdate,
+  formatHistoryDate,
+  formatPercentageValue,
+  MaintenanceConfig,
+  DEFAULT_MAINTENANCE_CONFIG,
+} from "@/types";
+import {
+  fetchMaintenanceConfig,
+  updateMaintenanceConfig,
+} from "@/lib/maintenance";
 import PetalParticles from "@/components/PetalParticles";
 import AuthModal from "@/components/AuthModal";
 
@@ -37,10 +55,25 @@ export default function AdminPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<string>("");
 
+  // Maintenance Window State
+  const [mConfig, setMConfig] = useState<MaintenanceConfig>(DEFAULT_MAINTENANCE_CONFIG);
+  const [isUpdatingMaint, setIsUpdatingMaint] = useState(false);
+  const [customTitle, setCustomTitle] = useState("");
+  const [customMsg, setCustomMsg] = useState("");
+  const [customReturn, setCustomReturn] = useState("");
+  const [showMaintDetails, setShowMaintDetails] = useState(false);
+
   const loadData = useCallback(async () => {
     try {
-      const data = await fetchAllUpdates();
+      const [data, mData] = await Promise.all([
+        fetchAllUpdates(),
+        fetchMaintenanceConfig(),
+      ]);
       setUpdates(data);
+      setMConfig(mData);
+      setCustomTitle(mData.title);
+      setCustomMsg(mData.message);
+      setCustomReturn(mData.estimatedReturn || "");
     } catch (e) {
       console.error("Failed to load data:", e);
     } finally {
@@ -58,6 +91,47 @@ export default function AdminPage() {
   const showStatus = (msg: string) => {
     setStatusMsg(msg);
     setTimeout(() => setStatusMsg(""), 2500);
+  };
+
+  const handleToggleMaintenance = async () => {
+    setIsUpdatingMaint(true);
+    try {
+      const nextState = !mConfig.enabled;
+      const updated = await updateMaintenanceConfig({
+        enabled: nextState,
+        title: customTitle.trim() || DEFAULT_MAINTENANCE_CONFIG.title,
+        message: customMsg.trim() || DEFAULT_MAINTENANCE_CONFIG.message,
+        estimatedReturn: customReturn.trim() || DEFAULT_MAINTENANCE_CONFIG.estimatedReturn,
+      });
+      setMConfig(updated);
+      showStatus(
+        nextState
+          ? "Maintenance Window activated 🛠️"
+          : "Maintenance Window turned OFF ✨ Site is live!"
+      );
+    } catch {
+      showStatus("Failed to toggle maintenance mode.");
+    } finally {
+      setIsUpdatingMaint(false);
+    }
+  };
+
+  const handleSaveMaintenanceDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdatingMaint(true);
+    try {
+      const updated = await updateMaintenanceConfig({
+        title: customTitle.trim() || DEFAULT_MAINTENANCE_CONFIG.title,
+        message: customMsg.trim() || DEFAULT_MAINTENANCE_CONFIG.message,
+        estimatedReturn: customReturn.trim() || DEFAULT_MAINTENANCE_CONFIG.estimatedReturn,
+      });
+      setMConfig(updated);
+      showStatus("Maintenance settings saved 💾");
+    } catch {
+      showStatus("Failed to save maintenance settings.");
+    } finally {
+      setIsUpdatingMaint(false);
+    }
   };
 
   const handleDeleteEntry = async (id: string) => {
@@ -146,6 +220,156 @@ export default function AdminPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Maintenance Window Control Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="z-10 w-full max-w-lg mb-5"
+      >
+        <div className="rounded-3xl bg-[#FFF7F8] border border-[#EBC7CE] p-4 sm:p-5 shadow-xs">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div
+                className={`p-2.5 rounded-2xl ${
+                  mConfig.enabled
+                    ? "bg-[#D88C9A]/15 text-[#D88C9A]"
+                    : "bg-emerald-50 text-emerald-600"
+                }`}
+              >
+                <Wrench size={18} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-[#242124]">
+                    Maintenance Window
+                  </h3>
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+                      mConfig.enabled
+                        ? "bg-[#D88C9A]/20 text-[#D88C9A]"
+                        : "bg-emerald-100 text-emerald-700"
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        mConfig.enabled
+                          ? "bg-[#D88C9A] animate-pulse"
+                          : "bg-emerald-500"
+                      }`}
+                    />
+                    {mConfig.enabled ? "Active" : "Off (Live)"}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#7A7276] mt-0.5">
+                  {mConfig.enabled
+                    ? "Visitors see the Under Maintenance window"
+                    : "Website is public and fully accessible"}
+                </p>
+              </div>
+            </div>
+
+            {/* Toggle Button */}
+            <button
+              onClick={handleToggleMaintenance}
+              disabled={isUpdatingMaint}
+              className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-all active:scale-95 cursor-pointer touch-manipulation shadow-xs flex items-center gap-1.5 shrink-0 ${
+                mConfig.enabled
+                  ? "bg-[#242124] hover:bg-black text-white"
+                  : "bg-[#D88C9A] hover:bg-[#C97B89] text-white"
+              }`}
+            >
+              <Power size={12} />
+              <span>{mConfig.enabled ? "Turn OFF" : "Turn ON"}</span>
+            </button>
+          </div>
+
+          {/* Expandable Maintenance Window Settings */}
+          <div className="mt-3 pt-3 border-t border-[#EBC7CE]/40">
+            <button
+              type="button"
+              onClick={() => setShowMaintDetails(!showMaintDetails)}
+              className="w-full flex items-center justify-between text-xs text-[#7A7276] hover:text-[#242124] transition-colors py-1 cursor-pointer"
+            >
+              <span className="flex items-center gap-1.5 font-medium">
+                <Edit3 size={12} className="text-[#D88C9A]" />
+                Customize Maintenance Window Text
+              </span>
+              <ChevronDown
+                size={14}
+                className={`transition-transform duration-200 ${
+                  showMaintDetails ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {showMaintDetails && (
+              <form onSubmit={handleSaveMaintenanceDetails} className="mt-3 space-y-2.5">
+                <div>
+                  <label className="block text-[11px] font-medium text-[#7A7276] mb-1">
+                    Window Title
+                  </label>
+                  <input
+                    type="text"
+                    value={customTitle}
+                    onChange={(e) => setCustomTitle(e.target.value)}
+                    placeholder="e.g. Polishing Things Up ✨"
+                    className="w-full text-xs px-3 py-2 rounded-xl bg-white border border-[#EBC7CE]/80 text-[#242124] focus:outline-none focus:border-[#D88C9A]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-medium text-[#7A7276] mb-1">
+                    Announcement Message
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={customMsg}
+                    onChange={(e) => setCustomMsg(e.target.value)}
+                    placeholder="Message shown to visitors..."
+                    className="w-full text-xs px-3 py-2 rounded-xl bg-white border border-[#EBC7CE]/80 text-[#242124] focus:outline-none focus:border-[#D88C9A] resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-medium text-[#7A7276] mb-1">
+                    Estimated Return
+                  </label>
+                  <input
+                    type="text"
+                    value={customReturn}
+                    onChange={(e) => setCustomReturn(e.target.value)}
+                    placeholder="e.g. In a few moments"
+                    className="w-full text-xs px-3 py-2 rounded-xl bg-white border border-[#EBC7CE]/80 text-[#242124] focus:outline-none focus:border-[#D88C9A]"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomTitle(DEFAULT_MAINTENANCE_CONFIG.title);
+                      setCustomMsg(DEFAULT_MAINTENANCE_CONFIG.message);
+                      setCustomReturn(DEFAULT_MAINTENANCE_CONFIG.estimatedReturn || "");
+                    }}
+                    className="px-3 py-1.5 rounded-full text-[11px] text-[#7A7276] hover:bg-[#EBC7CE]/30 transition-colors cursor-pointer"
+                  >
+                    Reset Defaults
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUpdatingMaint}
+                    className="px-4 py-1.5 rounded-full bg-[#D88C9A] hover:bg-[#C97B89] text-white text-[11px] font-semibold tracking-wide transition-all active:scale-95 shadow-2xs cursor-pointer"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      </motion.div>
 
       {/* Stats Cards */}
       {!isLoading && updates.length > 0 && (

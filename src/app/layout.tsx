@@ -36,6 +36,8 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
+import MaintenanceProvider from "@/components/MaintenanceProvider";
+
 export default function RootLayout({
   children,
 }: {
@@ -47,7 +49,7 @@ export default function RootLayout({
       className={`${dmSerif.variable} ${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#F7F3F0] text-[#242124] selection:bg-[#EBC7CE]">
-        {children}
+        <MaintenanceProvider>{children}</MaintenanceProvider>
       </body>
     </html>
   );

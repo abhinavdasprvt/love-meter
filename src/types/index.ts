@@ -154,3 +154,20 @@ export function formatHistoryDate(dateString: string): { main: string; sub: stri
     return { main: "Past entry", sub: "" };
   }
 }
+
+export interface MaintenanceConfig {
+  enabled: boolean;
+  title: string;
+  message: string;
+  estimatedReturn?: string;
+  allowBypass?: boolean;
+  lastUpdated?: string;
+}
+
+export const DEFAULT_MAINTENANCE_CONFIG: MaintenanceConfig = {
+  enabled: true,
+  title: "Polishing Things Up ✨",
+  message: "We're currently fine-tuning our little love meter to make everything smoother, sweeter, and more magical. We'll be back online very shortly!",
+  estimatedReturn: "A few moments",
+  allowBypass: true,
+};

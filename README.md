@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TRUPTI 🪷✨ — Love Meter
+
+A tiny, beautiful place for today's feeling.
+
+## Features
+
+- **Live Daily Percentage**: Minimal interactive circular progress indicator with gentle petal physics.
+- **Dynamic Messages**: Contextual heartfelt reactions corresponding to percentage feelings.
+- **History & Memory Lane**: View daily entries, streaks, and trends.
+- **Under Maintenance Window**:
+  - Aesthetic frosted glass overlay with live progress indicator.
+  - Interactive "Check Live Status" check.
+  - Owner / Secret Passcode access to bypass maintenance window.
+  - Fully controllable from the Admin Dashboard with 1-click toggle and customizable announcement copy.
+- **Role-Based PIN Authentication**:
+  - Trupti PIN (`1603`): Update daily percentage & note.
+  - Admin PIN (`0609`): Admin dashboard, manage history, clear records, and toggle/configure Maintenance Mode.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See `.env.example` for reference:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `NEXT_PUBLIC_TRUPTI_PIN` (default: 1603)
+- `NEXT_PUBLIC_ADMIN_PIN` (default: 0609)
+- `NEXT_PUBLIC_MAINTENANCE_MODE` (default: true)

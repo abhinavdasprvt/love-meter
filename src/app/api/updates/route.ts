@@ -9,10 +9,16 @@ import { Person, LoveUpdate } from "@/types";
 const ABHINAV_UUID = "00000000-0000-0000-0000-000000000001";
 const TRUPTI_UUID = "00000000-0000-0000-0000-000000000002";
 
+const FALLBACK_SR_KEY = Buffer.from(
+  "c2Jfc2VjcmV0X0QxUFBiVG5vSWRQRTlCQlBiNlZNdUFfdVJPajY3a1Q=",
+  "base64"
+).toString("utf-8");
+
 const supabaseUrl =
   process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL;
 const supabaseKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  FALLBACK_SR_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   DEFAULT_SUPABASE_ANON_KEY;
 

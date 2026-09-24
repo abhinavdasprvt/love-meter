@@ -12,9 +12,8 @@ import {
   formatPercentageValue,
 } from "@/types";
 import {
-  fetchLatestUpdate,
-  fetchYesterdayUpdate,
   fetchAllUpdates,
+  isSameDay,
 } from "@/lib/storage";
 import { AuthRole, setAuthenticatedSession } from "@/lib/auth";
 import ProgressRing from "@/components/ProgressRing";
@@ -66,14 +65,38 @@ function HomeContent() {
 
   const loadData = useCallback(async () => {
     try {
-      const [tLatest, tYday, aLatest, aYday, tHist, aHist] = await Promise.all([
-        fetchLatestUpdate("trupti"),
-        fetchYesterdayUpdate("trupti"),
-        fetchLatestUpdate("abhinav"),
-        fetchYesterdayUpdate("abhinav"),
-        fetchAllUpdates("trupti"),
-        fetchAllUpdates("abhinav"),
-      ]);
+      const allUpdates = await fetchAllUpdates();
+
+      const tHist = allUpdates.filter((u) => u.person === "trupti");
+      const aHist = allUpdates.filter((u) => u.person === "abhinav");
+
+      const tLatest = tHist.length > 0 ? tHist[0] : null;
+      const aLatest = aHist.length > 0 ? aHist[0] : null;
+
+      const today = new Date();
+      let tYday: { percentage: number; message?: string | null } | null = null;
+      if (
+        tLatest &&
+        isSameDay(new Date(tLatest.created_at), today) &&
+        tHist.length >= 2
+      ) {
+        tYday = {
+          percentage: tHist[1].percentage,
+          message: tHist[1].message,
+        };
+      }
+
+      let aYday: { percentage: number; message?: string | null } | null = null;
+      if (
+        aLatest &&
+        isSameDay(new Date(aLatest.created_at), today) &&
+        aHist.length >= 2
+      ) {
+        aYday = {
+          percentage: aHist[1].percentage,
+          message: aHist[1].message,
+        };
+      }
 
       setTruptiUpdate(tLatest);
       setTruptiYesterday(tYday);

@@ -146,12 +146,10 @@ export async function fetchAllUpdates(person?: Person): Promise<LoveUpdate[]> {
 
       if (!error && Array.isArray(data)) {
         const normalized = data.map(normalizeRow);
-        if (normalized.length > 0) {
-          saveLocalData(normalized);
-          return person
-            ? normalized.filter((u) => u.person === person)
-            : normalized;
-        }
+        saveLocalData(normalized);
+        return person
+          ? normalized.filter((u) => u.person === person)
+          : normalized;
       }
     } catch (e) {
       console.warn("Direct Supabase fetch exception, using local fallback:", e);
@@ -413,13 +411,14 @@ export async function deleteSingleUpdate(
   }
 
   // 2. Direct Supabase client fallback
-  if (isSupabaseConfigured && supabase) {
+  if (serverErr && isSupabaseConfigured && supabase) {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("love_updates")
         .delete()
-        .eq("id", id);
-      if (!error) {
+        .eq("id", id)
+        .select();
+      if (!error && data && data.length > 0) {
         serverErr = undefined; // Succeeded via direct Supabase client
       }
     } catch (e) {
@@ -427,23 +426,22 @@ export async function deleteSingleUpdate(
     }
   }
 
-  // 3. Update local cache immediately
-  try {
-    const current = getLocalData();
-    const filtered = current.filter((u) => u.id !== id);
-    saveLocalData(filtered);
-    if (filtered.length === 0 && typeof window !== "undefined") {
-      localStorage.setItem("trupti_history_cleared", "true");
+  // 3. Only update local cache if server or client deletion actually succeeded
+  if (!serverErr) {
+    try {
+      const current = getLocalData();
+      const filtered = current.filter((u) => u.id !== id);
+      saveLocalData(filtered);
+      if (filtered.length === 0 && typeof window !== "undefined") {
+        localStorage.setItem("trupti_history_cleared", "true");
+      }
+    } catch (e) {
+      console.warn("Local storage delete error:", e);
     }
-  } catch (e) {
-    console.warn("Local storage delete error:", e);
+    return { success: true };
   }
 
-  if (serverErr) {
-    return { success: false, error: serverErr };
-  }
-
-  return { success: true };
+  return { success: false, error: serverErr };
 }
 
 export async function clearAllHistory(

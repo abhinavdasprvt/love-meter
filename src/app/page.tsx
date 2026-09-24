@@ -297,23 +297,13 @@ export default function HomePage() {
           </span>
         </button>
 
-        <div className="flex items-center gap-4 text-xs sm:text-sm text-[#7A7276]">
+        <div className="flex items-center justify-center text-xs sm:text-sm text-[#7A7276]">
           <Link
             href={`/history?person=${activePerson}`}
             className="hover:text-[#242124] tracking-wide py-1 border-b border-transparent hover:border-current transition-all touch-manipulation"
           >
             See {isAbhinav ? "Abhinav's" : "Trupti's"} history
           </Link>
-          <span>•</span>
-          <button
-            onClick={() => {
-              setAuthTargetPerson("admin");
-              setIsAuthModalOpen(true);
-            }}
-            className="hover:text-[#242124] tracking-wide py-1 text-[11px] opacity-70 hover:opacity-100 transition-all cursor-pointer"
-          >
-            Admin
-          </button>
         </div>
       </motion.div>
 

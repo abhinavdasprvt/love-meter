@@ -1,20 +1,33 @@
-# TRUPTI 🪷✨ — Love Meter
+# TRUPTI 🪷 & ABHINAV 💙 — Love Meter
 
-A tiny, beautiful place for today's feeling.
+A tiny, beautiful place for our feelings, love records, and mutual harmony.
 
 ## Features
 
-- **Live Daily Percentage**: Minimal interactive circular progress indicator with gentle petal physics.
-- **Dynamic Messages**: Contextual heartfelt reactions corresponding to percentage feelings.
-- **History & Memory Lane**: View daily entries, streaks, and trends.
+- **Dual Person Selector**: Seamlessly switch between **Abhinav 💙** and **Trupti 🌸** on the main page.
+- **Dynamic Pastel Palettes & Particles**:
+  - **Abhinav**: Celestial powder light blue (`#F0F6FA`), blue sparkles, and floating blue hearts.
+  - **Trupti**: Gentle blush rose (`#F7F3F0`), pink cherry blossom petals, and lotus flower.
+- **Interactive Percentages & Messages**:
+  - For Abhinav: "how much do I love my girl today?" with customized deep affection messages.
+  - For Trupti: "how much do you love me right now?" with signature playful & sweet messages.
+- **Our Love Analysis Window ✨**:
+  - Mutual Love Sync score & Harmony level.
+  - Side-by-side comparison of daily feelings & notes.
+  - Cute relationship metrics (Cuddle Index, Sweetness Level, Daily Telepathy).
+  - Interactive "Recalibrate Love Resonance" action with confetti.
+- **Funny & Love Interactions**:
+  - Playful "Poke Partner 👉" with witty spontaneous reactions.
+  - "Send Kiss 💋" with floating confetti.
+  - Daily "Love Fortune 🥠" predictions.
+- **Role-Based Passcode Access**:
+  - **Abhinav Passcode** (`2305`): Update Abhinav's percentage.
+  - **Trupti Passcode** (`1603`): Update Trupti's percentage.
+  - **Admin Passcode** (`0609`): Hidden Admin dashboard & maintenance mode controller.
 - **Under Maintenance Window**:
-  - Aesthetic frosted glass overlay with live progress indicator.
-  - Interactive "Check Live Status" check.
-  - Owner / Secret Passcode access to bypass maintenance window.
-  - Fully controllable from the Admin Dashboard with 1-click toggle and customizable announcement copy.
-- **Role-Based PIN Authentication**:
-  - Trupti PIN (`1603`): Update daily percentage & note.
-  - Admin PIN (`0609`): Admin dashboard, manage history, clear records, and toggle/configure Maintenance Mode.
+  - Beautiful frosted glass overlay with live progress indicator, health checker, and secret bypass.
+  - 1-click toggleable from `/admin`.
+- **Server Data Preservation**: All existing historical server records are 100% preserved.
 
 ## Getting Started
 
@@ -31,6 +44,7 @@ See `.env.example` for reference:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `NEXT_PUBLIC_ABHINAV_PIN` (default: 2305)
 - `NEXT_PUBLIC_TRUPTI_PIN` (default: 1603)
 - `NEXT_PUBLIC_ADMIN_PIN` (default: 0609)
 - `NEXT_PUBLIC_MAINTENANCE_MODE` (default: true)

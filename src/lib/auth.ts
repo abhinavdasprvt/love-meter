@@ -1,8 +1,17 @@
-export type AuthRole = "trupti" | "admin" | null;
+export type AuthRole = "abhinav" | "trupti" | "admin" | null;
+export type Person = "abhinav" | "trupti";
 
+const DEFAULT_ABHINAV_PIN = "2305";
 const DEFAULT_TRUPTI_PIN = "1603";
 const DEFAULT_ADMIN_PIN = "0609";
-const AUTH_STORAGE_KEY = "trupti_authenticated_session";
+const AUTH_STORAGE_KEY = "love_meter_authenticated_session";
+
+function getAbhinavPin(): string {
+  if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_ABHINAV_PIN) {
+    return process.env.NEXT_PUBLIC_ABHINAV_PIN.trim();
+  }
+  return DEFAULT_ABHINAV_PIN;
+}
 
 function getTruptiPin(): string {
   if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_TRUPTI_PIN) {
@@ -21,6 +30,7 @@ function getAdminPin(): string {
 /** Check which role a PIN corresponds to. Returns null if invalid. */
 export function checkPin(enteredPin: string): AuthRole {
   const pin = enteredPin.trim();
+  if (pin === getAbhinavPin()) return "abhinav";
   if (pin === getTruptiPin()) return "trupti";
   if (pin === getAdminPin()) return "admin";
   return null;
@@ -45,6 +55,11 @@ export function getAuthenticatedRole(): AuthRole {
 
 export function isUserAuthenticated(): boolean {
   return getAuthenticatedRole() !== null;
+}
+
+export function isPersonAuthenticated(person: Person): boolean {
+  const role = getAuthenticatedRole();
+  return role === person || role === "admin";
 }
 
 export function isAdminAuthenticated(): boolean {

@@ -1,3 +1,5 @@
+export type Person = "abhinav" | "trupti";
+
 export interface LoveUpdate {
   id: string;
   percentage: number;
@@ -5,6 +7,7 @@ export interface LoveUpdate {
   created_at: string;
   updated_at: string;
   updated_by?: string | null;
+  person?: Person;
 }
 
 export interface DynamicMessage {
@@ -12,9 +15,62 @@ export interface DynamicMessage {
   subtext?: string;
 }
 
-export function getDynamicMessage(percentage: number): DynamicMessage {
+export function getDynamicMessage(
+  percentage: number,
+  person: Person = "trupti"
+): DynamicMessage {
   const rounded = Math.round(percentage * 10) / 10;
 
+  if (person === "abhinav") {
+    if (rounded === 0) {
+      return {
+        text: "Error 404: Impossible value detected! 🛸",
+        subtext: "Abhinav's love meter physically cannot reach 0.",
+      };
+    }
+    if (rounded <= 25) {
+      return {
+        text: "Even grumpy, you're the prettiest girl ever. 🥺💙",
+        subtext: "Ordering your favorite treats and planning cuddles.",
+      };
+    }
+    if (rounded <= 50) {
+      return {
+        text: "Halfway? You already own 100% of my thoughts! 🌊",
+        subtext: "Just waiting for you to smile at me.",
+      };
+    }
+    if (rounded <= 70) {
+      return {
+        text: "Madly in love with you today and always. ✨",
+        subtext: "You make every single day feel so special.",
+      };
+    }
+    if (rounded <= 85) {
+      return {
+        text: "Head over heels for my favorite girl. 💙",
+        subtext: "My heart races every time your name pops up.",
+      };
+    }
+    if (rounded <= 94) {
+      return {
+        text: "Completely obsessed with your smile. 🪐✨",
+        subtext: "I fall in love with you all over again every morning.",
+      };
+    }
+    if (rounded < 100) {
+      return {
+        text: `At ${rounded}%! Overflowing with love for you 💫`,
+        subtext: "One little hug and I'm skyrocketing straight past 100%!",
+      };
+    }
+    return {
+      text: "100% and completely yours forever. 🪐💙",
+      subtext: "My whole universe belongs to you, Trupti.",
+    };
+  }
+
+  // Trupti's dynamic reactions
   if (rounded === 0) {
     return {
       text: "Well... that's honest. 😭",
@@ -88,7 +144,6 @@ export function getDynamicMessage(percentage: number): DynamicMessage {
 }
 
 export function formatPercentageValue(val: number): string {
-  // If integer or .0, show clean number, otherwise show 1 decimal place
   const num = Number(val);
   if (isNaN(num)) return "0";
   return num % 1 === 0 ? num.toFixed(0) : num.toFixed(1);
@@ -100,9 +155,17 @@ export function formatRelativeDate(dateString: string): string {
     if (isNaN(target.getTime())) return "Recently";
 
     const now = new Date();
-    const targetDate = new Date(target.getFullYear(), target.getMonth(), target.getDate());
-    const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+    const targetDate = new Date(
+      target.getFullYear(),
+      target.getMonth(),
+      target.getDate()
+    );
+    const todayDate = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+
     const diffMs = todayDate.getTime() - targetDate.getTime();
     const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
@@ -123,15 +186,28 @@ export function formatRelativeDate(dateString: string): string {
   }
 }
 
-export function formatHistoryDate(dateString: string): { main: string; sub: string } {
+export function formatHistoryDate(dateString: string): {
+  main: string;
+  sub: string;
+} {
   try {
     const target = new Date(dateString);
     if (isNaN(target.getTime())) return { main: "Previous day", sub: "" };
 
     const now = new Date();
-    const targetDate = new Date(target.getFullYear(), target.getMonth(), target.getDate());
-    const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const diffDays = Math.round((todayDate.getTime() - targetDate.getTime()) / (1000 * 60 * 60 * 24));
+    const targetDate = new Date(
+      target.getFullYear(),
+      target.getMonth(),
+      target.getDate()
+    );
+    const todayDate = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const diffDays = Math.round(
+      (todayDate.getTime() - targetDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
 
     const timeStr = target.toLocaleTimeString("en-US", {
       hour: "numeric",
@@ -155,6 +231,53 @@ export function formatHistoryDate(dateString: string): { main: string; sub: stri
   }
 }
 
+export interface LoveComparison {
+  abhinavScore: number;
+  truptiScore: number;
+  syncScore: number;
+  difference: number;
+  leader: "abhinav" | "trupti" | "tied";
+  harmonyLevel: string;
+  funnyInsight: string;
+}
+
+export function calculateLoveComparison(
+  abhinavScore: number,
+  truptiScore: number
+): LoveComparison {
+  const diff = Math.round(Math.abs(abhinavScore - truptiScore) * 10) / 10;
+  const syncScore = Math.max(0, Math.min(100, Math.round((100 - diff) * 10) / 10));
+
+  let leader: "abhinav" | "trupti" | "tied" = "tied";
+  if (abhinavScore > truptiScore) leader = "abhinav";
+  else if (truptiScore > abhinavScore) leader = "trupti";
+
+  let harmonyLevel = "Harmonious Orbit ✨";
+  if (syncScore >= 95) harmonyLevel = "Twin Souls Resonance 💫";
+  else if (syncScore >= 80) harmonyLevel = "Super Sweet Alignment 🌸";
+  else if (syncScore >= 65) harmonyLevel = "Playful Flirty Dynamic 😏";
+  else harmonyLevel = "Emergency Hugs Required 🚨";
+
+  let funnyInsight = "Both of you are completely adorable today.";
+  if (leader === "abhinav") {
+    funnyInsight = `Abhinav is leading by +${diff}% in affection points! Someone get this boy an award. 🏆💙`;
+  } else if (leader === "trupti") {
+    funnyInsight = `Trupti is currently +${diff}% sweeter today! Abhinav must be blushing non-stop. 🌸🥺`;
+  } else {
+    funnyInsight = "Exactly tied at the same percentage! Pure telepathic connection. 🔮✨";
+  }
+
+  return {
+    abhinavScore,
+    truptiScore,
+    syncScore,
+    difference: diff,
+    leader,
+    harmonyLevel,
+    funnyInsight,
+  };
+}
+
 export interface MaintenanceConfig {
   enabled: boolean;
   title: string;
@@ -167,7 +290,8 @@ export interface MaintenanceConfig {
 export const DEFAULT_MAINTENANCE_CONFIG: MaintenanceConfig = {
   enabled: true,
   title: "Polishing Things Up ✨",
-  message: "We're currently fine-tuning our little love meter to make everything smoother, sweeter, and more magical. We'll be back online very shortly!",
+  message:
+    "We're currently fine-tuning our little love meter to make everything smoother, sweeter, and more magical. We'll be back online very shortly!",
   estimatedReturn: "A few moments",
   allowBypass: true,
 };

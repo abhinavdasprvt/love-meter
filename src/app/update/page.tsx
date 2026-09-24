@@ -1,20 +1,28 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Check, Sparkles, Plus, Minus } from "lucide-react";
-import { fetchAllUpdates, getTodayUpdate, saveLoveUpdate } from "@/lib/storage";
-import { isUserAuthenticated, AuthRole } from "@/lib/auth";
-import { LoveUpdate, formatPercentageValue } from "@/types";
+import {
+  fetchAllUpdates,
+  getTodayUpdate,
+  saveLoveUpdate,
+} from "@/lib/storage";
+import {
+  isUserAuthenticated,
+  getAuthenticatedRole,
+  AuthRole,
+} from "@/lib/auth";
+import { LoveUpdate, Person, formatPercentageValue } from "@/types";
 import AnimatedPercentage from "@/components/AnimatedPercentage";
 import DynamicMessageDisplay from "@/components/DynamicMessage";
 import PetalParticles from "@/components/PetalParticles";
 import AuthModal from "@/components/AuthModal";
 import confetti from "canvas-confetti";
 
-const SWEET_NOTE_SUGGESTIONS = [
+const TRUPTI_NOTE_SUGGESTIONS = [
   "You're annoying today 😂",
   "Missing you extra today 🥺",
   "Craving ice cream with you 🍦",
@@ -24,9 +32,32 @@ const SWEET_NOTE_SUGGESTIONS = [
   "Thinking about your smile 💭",
 ];
 
-export default function UpdatePage() {
+const ABHINAV_NOTE_SUGGESTIONS = [
+  "You're the prettiest girl in the world 🥺💙",
+  "Can't wait to see your smile today ✨",
+  "Ordering your favorite treats 🍦",
+  "Head over heels for you 💕",
+  "Thinking about holding your hand 🪐",
+  "Best girlfriend ever 🌸",
+  "Proud of you always 💫",
+];
+
+function UpdatePageContent() {
   const router = useRouter();
-  const [percentage, setPercentage] = useState<number>(78);
+  const searchParams = useSearchParams();
+
+  // Determine person from query param or session
+  const paramPerson = searchParams.get("person") as Person | null;
+  const authRole = getAuthenticatedRole();
+  const initialPerson: Person =
+    paramPerson === "abhinav" || authRole === "abhinav"
+      ? "abhinav"
+      : "trupti";
+
+  const [person, setPerson] = useState<Person>(initialPerson);
+  const [percentage, setPercentage] = useState<number>(
+    initialPerson === "abhinav" ? 95 : 78
+  );
   const [message, setMessage] = useState<string>("");
   const [todayUpdate, setTodayUpdate] = useState<LoveUpdate | null>(null);
   const [isEditingToday, setIsEditingToday] = useState<boolean>(false);
@@ -36,6 +67,8 @@ export default function UpdatePage() {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
 
+  const isAbhinav = person === "abhinav";
+
   useEffect(() => {
     if (!isUserAuthenticated()) {
       setIsAuthModalOpen(true);
@@ -43,8 +76,8 @@ export default function UpdatePage() {
 
     const checkExisting = async () => {
       try {
-        const all = await fetchAllUpdates();
-        const today = getTodayUpdate(all);
+        const all = await fetchAllUpdates(person);
+        const today = getTodayUpdate(all, person);
         if (today) {
           setTodayUpdate(today);
           setPercentage(today.percentage);
@@ -60,7 +93,7 @@ export default function UpdatePage() {
     };
 
     checkExisting();
-  }, []);
+  }, [person]);
 
   const adjustValue = (delta: number) => {
     setPercentage((prev) => {
@@ -79,7 +112,9 @@ export default function UpdatePage() {
         particleCount: 20,
         spread: 50,
         origin: { y: 0.6 },
-        colors: ["#D88C9A", "#EBC7CE", "#F6E6EA"],
+        colors: isAbhinav
+          ? ["#4A88E8", "#C3DDF7", "#FFFFFF"]
+          : ["#D88C9A", "#EBC7CE", "#F6E6EA"],
         disableForReducedMotion: true,
       });
     }
@@ -90,7 +125,7 @@ export default function UpdatePage() {
     setErrorMessage("");
 
     try {
-      const res = await saveLoveUpdate(percentage, message);
+      const res = await saveLoveUpdate(percentage, message, person);
       if (res.success) {
         setSaveSuccess(true);
         if (percentage === 100) {
@@ -98,14 +133,16 @@ export default function UpdatePage() {
             particleCount: 40,
             spread: 70,
             origin: { y: 0.5 },
-            colors: ["#D88C9A", "#EBC7CE", "#FFD700"],
+            colors: isAbhinav
+              ? ["#4A88E8", "#C3DDF7", "#FFD700"]
+              : ["#D88C9A", "#EBC7CE", "#FFD700"],
           });
         }
         setTimeout(() => {
           router.push("/");
         }, 1600);
       } else {
-        setErrorMessage(res.error || "Something went wrong. Try again 🪷");
+        setErrorMessage(res.error || "Something went wrong. Try again ♡");
         setIsSaving(false);
       }
     } catch {
@@ -115,13 +152,27 @@ export default function UpdatePage() {
   };
 
   const hasAlreadyUpdatedToday = Boolean(todayUpdate) && !isEditingToday;
+  const noteSuggestions = isAbhinav
+    ? ABHINAV_NOTE_SUGGESTIONS
+    : TRUPTI_NOTE_SUGGESTIONS;
+
+  const bgTheme = isAbhinav ? "bg-[#F0F6FA]" : "bg-[#F7F3F0]";
+  const selectionTheme = isAbhinav
+    ? "selection:bg-[#C3DDF7]"
+    : "selection:bg-[#EBC7CE]";
+  const accentColor = isAbhinav ? "text-[#3B7CD8]" : "text-[#D88C9A]";
+  const btnColor = isAbhinav
+    ? "bg-[#4A88E8] hover:bg-[#3B7CD8] shadow-[0_4px_18px_rgba(74,136,232,0.35)]"
+    : "bg-[#D88C9A] hover:bg-[#C97B89] shadow-[0_4px_18px_rgba(216,140,154,0.35)]";
 
   return (
-    <main className="relative min-h-[100dvh] w-full flex flex-col justify-between items-center px-4 sm:px-6 py-6 sm:py-10 selection:bg-[#EBC7CE] overflow-x-hidden">
-      <PetalParticles isSpecial={percentage === 100} />
+    <main
+      className={`relative min-h-[100dvh] w-full flex flex-col justify-between items-center px-4 sm:px-6 py-6 sm:py-10 ${bgTheme} ${selectionTheme} transition-colors duration-500 overflow-x-hidden`}
+    >
+      <PetalParticles person={person} />
 
       {/* Top Header */}
-      <div className="z-10 w-full max-w-sm flex items-center justify-between mb-2">
+      <div className="z-10 w-full max-w-sm flex items-center justify-between">
         <Link
           href="/"
           className="flex items-center gap-1.5 text-xs text-[#7A7276] hover:text-[#242124] transition-colors py-2 px-1 group touch-manipulation"
@@ -132,243 +183,217 @@ export default function UpdatePage() {
           />
           <span>Back</span>
         </Link>
-        <span className="text-xl select-none" role="img" aria-label="lotus">
-          🪷
-        </span>
-        <div className="w-12" />
+
+        {/* Profile Switcher inside update */}
+        <div className="flex items-center p-0.5 rounded-full bg-white/80 border border-black/5 shadow-2xs">
+          <button
+            onClick={() => setPerson("abhinav")}
+            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
+              isAbhinav
+                ? "bg-[#E8F2FC] text-[#3B7CD8]"
+                : "text-[#7A7276] hover:text-[#242124]"
+            }`}
+          >
+            Abhinav 💙
+          </button>
+          <button
+            onClick={() => setPerson("trupti")}
+            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all ${
+              !isAbhinav
+                ? "bg-[#FFF0F3] text-[#D88C9A]"
+                : "text-[#7A7276] hover:text-[#242124]"
+            }`}
+          >
+            Trupti 🌸
+          </button>
+        </div>
+
+        <span className="text-xl select-none">{isAbhinav ? "🪐" : "🪷"}</span>
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Interactive Form Card */}
       <motion.div
+        key={person}
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="z-10 w-full max-w-sm my-auto flex flex-col items-center py-2"
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="z-10 w-full max-w-sm flex flex-col items-center my-auto py-2"
       >
-        {isLoading ? (
-          <div className="py-20 text-sm text-[#7A7276] animate-pulse">
-            Loading today&apos;s feeling...
-          </div>
-        ) : hasAlreadyUpdatedToday ? (
-          /* State: Already updated today */
-          <div className="w-full flex flex-col items-center text-center py-4 px-2">
-            <div className="w-12 h-12 rounded-full bg-[#EBC7CE]/40 flex items-center justify-center text-[#D88C9A] mb-3">
-              <Check size={22} strokeWidth={2.5} />
-            </div>
+        <span className="text-xs uppercase tracking-[0.25em] text-[#7A7276] font-semibold mb-1">
+          {isAbhinav ? "Abhinav's Love Meter" : "Trupti's Love Meter"}
+        </span>
 
-            <h2 className="text-xs uppercase tracking-widest text-[#7A7276] font-medium">
-              Today&apos;s percentage
-            </h2>
-
-            <div className="my-2">
-              <AnimatedPercentage
-                value={todayUpdate?.percentage ?? 82.5}
-                className="text-6xl sm:text-7xl font-normal"
-              />
-            </div>
-
-            {todayUpdate?.message && (
-              <p className="text-sm italic text-[#7A7276] bg-[#FFF7F8] px-4 py-2.5 rounded-xl border border-[#EBC7CE]/40 mb-3 max-w-xs shadow-xs">
-                &ldquo;{todayUpdate.message}&rdquo;
-              </p>
-            )}
-
-            <p className="text-base text-[#242124] font-serif mt-1">
-              You&apos;ve already updated today 🪷
+        {/* Already entered today banner */}
+        {hasAlreadyUpdatedToday && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-4 p-3 rounded-2xl bg-white/80 border border-black/5 text-center shadow-xs w-full"
+          >
+            <p className="text-xs text-[#7A7276] font-light">
+              You already logged today&apos;s feeling!
             </p>
-            <p className="text-xs text-[#7A7276] mt-1 mb-6">
-              Come back tomorrow or adjust today&apos;s feeling below.
-            </p>
-
             <button
               onClick={() => setIsEditingToday(true)}
-              className="w-full py-3.5 px-6 rounded-full bg-white/90 hover:bg-white text-xs font-semibold tracking-wider text-[#242124] uppercase border border-[#EBC7CE] shadow-xs active:scale-[0.98] transition-all touch-manipulation cursor-pointer"
+              className={`mt-1.5 text-xs font-semibold ${accentColor} underline cursor-pointer`}
             >
-              Edit today&apos;s feeling
+              Update it anyway?
             </button>
+          </motion.div>
+        )}
+
+        {/* Big Percentage Display */}
+        <div className="flex items-center justify-center my-2 select-none">
+          <AnimatedPercentage
+            value={isLoading ? 0 : percentage}
+            className="text-7xl sm:text-8xl font-normal"
+          />
+        </div>
+
+        {/* Dynamic Reaction Message */}
+        <DynamicMessageDisplay
+          percentage={percentage}
+          person={person}
+          className="mb-3"
+        />
+
+        {/* Slider & Precision Step Controls */}
+        <div className="w-full flex flex-col gap-2.5 px-2">
+          {/* Slider */}
+          <div className="relative py-2">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="0.5"
+              value={percentage}
+              disabled={isLoading || isSaving}
+              onChange={handleSliderChange}
+              aria-label="Love percentage"
+              className="touch-none"
+            />
           </div>
-        ) : (
-          /* State: Active Slider & Note Form */
-          <div className="w-full flex flex-col items-center">
-            <h2 className="text-xl sm:text-2xl font-serif text-[#242124] text-center">
-              How much today?
-            </h2>
-            <p className="text-xs text-[#7A7276] text-center mb-5">
-              Slide or fine-tune to wherever your heart is right now
-            </p>
 
-            {/* Live Percentage Display */}
-            <div className="mb-2">
-              <AnimatedPercentage
-                value={percentage}
-                className="text-6xl sm:text-7xl font-normal"
-              />
-            </div>
-
-            {/* Dynamic reaction preview */}
-            <DynamicMessageDisplay percentage={percentage} className="mb-4" />
-
-            {/* Interactive Tactile Slider */}
-            <div className="w-full px-2 mb-3">
-              <div className="relative flex items-center py-2">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  value={percentage}
-                  onChange={handleSliderChange}
-                  aria-label="Love percentage slider"
-                  className="w-full h-2 rounded-lg cursor-pointer touch-manipulation"
-                />
-              </div>
-
-              {/* Slider scale numbers */}
-              <div className="flex justify-between text-[11px] text-[#9B9499] font-medium px-1">
-                <span>0%</span>
-                <span>50%</span>
-                <span>100%</span>
-              </div>
-            </div>
-
-            {/* Decimal Fine-Tuning Controls */}
-            <div className="flex items-center justify-center gap-2 mb-6 w-full">
+          {/* Stepper Buttons for Decimals */}
+          <div className="flex items-center justify-between text-xs text-[#7A7276] px-1">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => adjustValue(-1)}
-                className="px-2.5 py-1.5 rounded-full bg-white/70 hover:bg-white text-xs font-medium text-[#7A7276] border border-[#EBC7CE]/60 active:scale-95 transition-all shadow-xs touch-manipulation cursor-pointer"
+                className="w-8 h-8 rounded-full bg-white/80 hover:bg-white active:scale-90 border border-black/5 flex items-center justify-center cursor-pointer shadow-2xs"
+                title="-1%"
               >
-                -1%
+                <Minus size={13} />
               </button>
               <button
                 type="button"
                 onClick={() => adjustValue(-0.1)}
-                className="px-2.5 py-1.5 rounded-full bg-white/70 hover:bg-white text-xs font-medium text-[#7A7276] border border-[#EBC7CE]/60 active:scale-95 transition-all shadow-xs touch-manipulation cursor-pointer flex items-center gap-0.5"
+                className="px-2 py-1 rounded-full bg-white/80 hover:bg-white active:scale-90 border border-black/5 text-[10px] cursor-pointer shadow-2xs font-mono"
               >
-                <Minus size={11} />
-                <span>0.1</span>
+                -0.1
               </button>
+            </div>
 
-              <span className="text-xs font-medium text-[#D88C9A] px-2 select-none">
-                {formatPercentageValue(percentage)}%
-              </span>
+            <span className="text-[11px] font-mono text-[#9B9499]">
+              {formatPercentageValue(percentage)}%
+            </span>
 
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => adjustValue(0.1)}
-                className="px-2.5 py-1.5 rounded-full bg-white/70 hover:bg-white text-xs font-medium text-[#7A7276] border border-[#EBC7CE]/60 active:scale-95 transition-all shadow-xs touch-manipulation cursor-pointer flex items-center gap-0.5"
+                onClick={() => adjustValue(+0.1)}
+                className="px-2 py-1 rounded-full bg-white/80 hover:bg-white active:scale-90 border border-black/5 text-[10px] cursor-pointer shadow-2xs font-mono"
               >
-                <Plus size={11} />
-                <span>0.1</span>
+                +0.1
               </button>
               <button
                 type="button"
-                onClick={() => adjustValue(1)}
-                className="px-2.5 py-1.5 rounded-full bg-white/70 hover:bg-white text-xs font-medium text-[#7A7276] border border-[#EBC7CE]/60 active:scale-95 transition-all shadow-xs touch-manipulation cursor-pointer"
+                onClick={() => adjustValue(+1)}
+                className="w-8 h-8 rounded-full bg-white/80 hover:bg-white active:scale-90 border border-black/5 flex items-center justify-center cursor-pointer shadow-2xs"
+                title="+1%"
               >
-                +1%
+                <Plus size={13} />
               </button>
             </div>
-
-            {/* Sweet & Teasy Quick Notes Suggestions */}
-            <div className="w-full mb-3">
-              <p className="text-[11px] text-[#7A7276] mb-1.5 px-1 font-medium">
-                Sweet little thoughts:
-              </p>
-              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pb-1">
-                {SWEET_NOTE_SUGGESTIONS.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    onClick={() => setMessage(suggestion)}
-                    className="text-[11px] px-2.5 py-1 rounded-full bg-white/80 hover:bg-white active:scale-95 text-[#6E676C] hover:text-[#242124] border border-[#EBC7CE]/50 transition-all touch-manipulation shadow-xs cursor-pointer text-left"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Optional Daily Note Textarea */}
-            <div className="w-full flex flex-col gap-1 mb-6">
-              <label
-                htmlFor="daily-note"
-                className="text-xs font-medium text-[#7A7276] flex items-center justify-between px-1"
-              >
-                <span>Want to leave a little note?</span>
-                <span className="text-[10px] text-[#9B9499] font-normal">(optional)</span>
-              </label>
-              <textarea
-                id="daily-note"
-                rows={2}
-                maxLength={200}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Today was actually nice :)"
-                className="w-full text-sm rounded-2xl bg-white/90 border border-[#EBC7CE]/70 p-3 text-[#242124] placeholder-[#9B9499]/70 focus:outline-none focus:border-[#D88C9A] focus:ring-1 focus:ring-[#D88C9A] transition-all resize-none shadow-xs"
-              />
-            </div>
-
-            {/* Error state */}
-            {errorMessage && (
-              <p className="text-xs text-[#C97B89] mb-3 text-center">
-                {errorMessage}
-              </p>
-            )}
-
-            {/* Save Button */}
-            <button
-              onClick={handleSave}
-              disabled={isSaving || saveSuccess}
-              className={`w-full py-3.5 px-6 rounded-full font-medium text-sm sm:text-base tracking-wide shadow-[0_4px_18px_rgba(216,140,154,0.35)] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 touch-manipulation ${
-                saveSuccess
-                  ? "bg-[#8CB39A] text-white"
-                  : "bg-[#D88C9A] hover:bg-[#C97B89] active:scale-[0.98] text-white"
-              }`}
-            >
-              {saveSuccess ? (
-                <>
-                  <Check size={18} />
-                  <span>Saved 🪷</span>
-                </>
-              ) : isSaving ? (
-                <span>Saving feeling...</span>
-              ) : (
-                <>
-                  <Sparkles size={16} />
-                  <span>Save today&apos;s feeling</span>
-                </>
-              )}
-            </button>
-
-            {/* Save confirmation preview */}
-            <AnimatePresence>
-              {saveSuccess && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="mt-3 text-center"
-                >
-                  <p className="text-xs text-[#7A7276]">
-                    Today&apos;s feeling:{" "}
-                    <strong className="text-[#242124]">
-                      {formatPercentageValue(percentage)}%
-                    </strong>
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
+        </div>
+
+        {/* Note Input */}
+        <div className="w-full mt-4 flex flex-col gap-1.5">
+          <label
+            htmlFor="sweet-note"
+            className="text-[11px] font-medium text-[#7A7276] px-1"
+          >
+            Leave a little note (optional) ♡
+          </label>
+          <div className="relative">
+            <input
+              id="sweet-note"
+              type="text"
+              maxLength={120}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={
+                isAbhinav
+                  ? "A sweet message for Trupti..."
+                  : "Say whatever you're feeling..."
+              }
+              className="w-full py-2.5 px-4 rounded-2xl bg-white/80 border border-black/5 text-sm text-[#242124] placeholder:text-[#9B9499] focus:outline-none focus:bg-white focus:border-[#D88C9A] transition-all shadow-2xs"
+            />
+          </div>
+
+          {/* Quick Note Suggestions */}
+          <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
+            {noteSuggestions.slice(0, 4).map((sugg, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setMessage(sugg)}
+                className="shrink-0 px-2.5 py-1 rounded-full bg-white/60 hover:bg-white border border-black/5 text-[10px] text-[#7A7276] hover:text-[#242124] transition-all cursor-pointer shadow-2xs"
+              >
+                {sugg}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Error Feedback */}
+        {errorMessage && (
+          <p className="mt-2 text-xs text-red-500 text-center font-medium">
+            {errorMessage}
+          </p>
         )}
       </motion.div>
 
-      {/* Subtle bottom note */}
-      <div className="z-10 text-[11px] text-[#9B9499] text-center pb-2">
-        TRUPTI 🪷✨ • A private digital space
-      </div>
+      {/* Save Button */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+        className="z-10 w-full max-w-sm pb-2"
+      >
+        <button
+          onClick={handleSave}
+          disabled={isSaving || saveSuccess}
+          className={`w-full py-3.5 px-6 rounded-full ${btnColor} active:scale-[0.98] text-white font-medium text-sm sm:text-base tracking-wide transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 group touch-manipulation disabled:opacity-80`}
+        >
+          {saveSuccess ? (
+            <>
+              <Check size={18} />
+              <span>Saved with love ♡</span>
+            </>
+          ) : isSaving ? (
+            <span>Saving your feeling...</span>
+          ) : (
+            <>
+              <Sparkles size={16} />
+              <span>Save {isAbhinav ? "Abhinav's" : "today's"} percentage</span>
+            </>
+          )}
+        </button>
+      </motion.div>
 
-      {/* PIN Authentication Modal */}
+      {/* Gatekeeper PIN modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => {
@@ -377,9 +402,25 @@ export default function UpdatePage() {
         }}
         onSuccess={(role: AuthRole) => {
           setIsAuthModalOpen(false);
-          if (role === "admin") router.push("/admin");
+          if (role === "abhinav") setPerson("abhinav");
+          else if (role === "trupti") setPerson("trupti");
         }}
+        targetPerson={person}
       />
     </main>
+  );
+}
+
+export default function UpdatePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center text-sm text-[#7A7276] animate-pulse">
+          Loading...
+        </div>
+      }
+    >
+      <UpdatePageContent />
+    </Suspense>
   );
 }

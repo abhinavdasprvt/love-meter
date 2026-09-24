@@ -58,6 +58,7 @@ export default function AdminPage() {
   // Maintenance Window State
   const [mConfig, setMConfig] = useState<MaintenanceConfig>(DEFAULT_MAINTENANCE_CONFIG);
   const [isUpdatingMaint, setIsUpdatingMaint] = useState(false);
+  const [adminFilter, setAdminFilter] = useState<"all" | "abhinav" | "trupti">("all");
   const [customTitle, setCustomTitle] = useState("");
   const [customMsg, setCustomMsg] = useState("");
   const [customReturn, setCustomReturn] = useState("");
@@ -470,6 +471,44 @@ export default function AdminPage() {
         </motion.div>
       )}
 
+      {/* Filter Segmented Control */}
+      {!isLoading && updates.length > 0 && (
+        <div className="z-10 w-full max-w-lg flex items-center justify-between mb-3 px-1">
+          <div className="flex items-center p-1 rounded-full bg-white/80 border border-[#EBC7CE]/40 shadow-2xs">
+            <button
+              onClick={() => setAdminFilter("all")}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                adminFilter === "all"
+                  ? "bg-[#242124] text-white shadow-2xs"
+                  : "text-[#7A7276] hover:text-[#242124]"
+              }`}
+            >
+              All ({updates.length})
+            </button>
+            <button
+              onClick={() => setAdminFilter("abhinav")}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                adminFilter === "abhinav"
+                  ? "bg-[#4A88E8] text-white shadow-2xs"
+                  : "text-[#7A7276] hover:text-[#242124]"
+              }`}
+            >
+              Abhinav ({updates.filter((u) => u.person === "abhinav").length}) 💙
+            </button>
+            <button
+              onClick={() => setAdminFilter("trupti")}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                adminFilter === "trupti"
+                  ? "bg-[#D88C9A] text-white shadow-2xs"
+                  : "text-[#7A7276] hover:text-[#242124]"
+              }`}
+            >
+              Trupti ({updates.filter((u) => u.person !== "abhinav").length}) 🌸
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Entries List */}
       <div className="z-10 w-full max-w-lg flex flex-col gap-2.5 mb-10">
         {isLoading ? (
@@ -489,38 +528,54 @@ export default function AdminPage() {
             </div>
           </div>
         ) : (
-          updates.map((entry, index) => {
-            const dateInfo = formatHistoryDate(entry.created_at);
-            const isDeleting = deletingId === entry.id;
+          updates
+            .filter((u) =>
+              adminFilter === "all"
+                ? true
+                : (u.person || "trupti") === adminFilter
+            )
+            .map((entry, index) => {
+              const dateInfo = formatHistoryDate(entry.created_at);
+              const isDeleting = deletingId === entry.id;
+              const isEntryAbhinav = entry.person === "abhinav";
 
-            return (
-              <motion.div
-                key={entry.id || index}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: isDeleting ? 0.4 : 1, y: 0 }}
-                transition={{ duration: 0.35, delay: index * 0.04 }}
-                className="w-full rounded-2xl bg-[#FFF7F8]/90 border border-[#EBC7CE]/40 p-3.5 sm:p-4 shadow-xs backdrop-blur-xs flex items-start justify-between gap-3 hover:border-[#D88C9A]/50 transition-colors"
-              >
-                {/* Left: Details */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Calendar size={12} className="text-[#D88C9A] shrink-0" />
-                    <span className="text-xs sm:text-sm font-medium text-[#242124]">
-                      {dateInfo.main}
-                    </span>
-                    {dateInfo.sub && (
-                      <span className="text-[10px] text-[#9B9499]">
-                        • {dateInfo.sub}
+              return (
+                <motion.div
+                  key={entry.id || index}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: isDeleting ? 0.4 : 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: index * 0.04 }}
+                  className="w-full rounded-2xl bg-[#FFF7F8]/90 border border-[#EBC7CE]/40 p-3.5 sm:p-4 shadow-xs backdrop-blur-xs flex items-start justify-between gap-3 hover:border-[#D88C9A]/50 transition-colors"
+                >
+                  {/* Left: Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                      <span
+                        className={`text-[9px] font-semibold uppercase px-2 py-0.5 rounded-full ${
+                          isEntryAbhinav
+                            ? "bg-[#E0EEFC] text-[#3B7CD8]"
+                            : "bg-[#FFEBF0] text-[#D88C9A]"
+                        }`}
+                      >
+                        {isEntryAbhinav ? "Abhinav 💙" : "Trupti 🌸"}
                       </span>
-                    )}
-                  </div>
+                      <Calendar size={12} className="text-[#D88C9A] shrink-0" />
+                      <span className="text-xs sm:text-sm font-medium text-[#242124]">
+                        {dateInfo.main}
+                      </span>
+                      {dateInfo.sub && (
+                        <span className="text-[10px] text-[#9B9499]">
+                          • {dateInfo.sub}
+                        </span>
+                      )}
+                    </div>
 
-                  <div className="flex items-baseline gap-1 mb-1">
-                    <span className="text-lg font-serif text-[#242124]">
-                      {formatPercentageValue(entry.percentage)}
-                    </span>
-                    <span className="text-xs text-[#D88C9A]">%</span>
-                  </div>
+                    <div className="flex items-baseline gap-1 mb-1">
+                      <span className="text-lg font-serif text-[#242124]">
+                        {formatPercentageValue(entry.percentage)}
+                      </span>
+                      <span className="text-xs text-[#D88C9A]">%</span>
+                    </div>
 
                   {entry.message && (
                     <div className="flex items-start gap-1.5">

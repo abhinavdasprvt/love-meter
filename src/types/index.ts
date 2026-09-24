@@ -265,25 +265,31 @@ export function calculateLoveComparison(
   truptiScore: number
 ): LoveComparison {
   const diff = Math.round(Math.abs(abhinavScore - truptiScore) * 10) / 10;
-  const syncScore = Math.max(0, Math.min(100, Math.round((100 - diff) * 10) / 10));
+  const average = (abhinavScore + truptiScore) / 2;
+  const closeness = Math.max(0, 100 - diff);
+  // Balanced harmonic resonance: blends overall high love and mutual closeness
+  const syncScore = Math.max(
+    0,
+    Math.min(100, Math.round((average * 0.6 + closeness * 0.4) * 10) / 10)
+  );
 
   let leader: "abhinav" | "trupti" | "tied" = "tied";
   if (abhinavScore > truptiScore) leader = "abhinav";
   else if (truptiScore > abhinavScore) leader = "trupti";
 
   let harmonyLevel = "Harmonious Orbit ✨";
-  if (syncScore >= 95) harmonyLevel = "Twin Souls Resonance 💫";
+  if (syncScore >= 92) harmonyLevel = "Twin Souls Resonance 💫";
   else if (syncScore >= 80) harmonyLevel = "Super Sweet Alignment 🌸";
   else if (syncScore >= 65) harmonyLevel = "Playful Flirty Dynamic 😏";
-  else harmonyLevel = "Emergency Hugs Required 🚨";
+  else harmonyLevel = "Cuddle Emergency 🚨 Hugs Required!";
 
-  let funnyInsight = "Both of you are completely adorable today.";
+  let funnyInsight = "Both of you are completely adorable together today.";
   if (leader === "abhinav") {
     funnyInsight = `Abhinav is leading by +${diff}% in affection points! Someone get this boy an award. 🏆💙`;
   } else if (leader === "trupti") {
-    funnyInsight = `Trupti is currently +${diff}% sweeter today! Abhinav must be blushing non-stop. 🌸🥺`;
+    funnyInsight = `Trupti is currently +${diff}% sweeter today! Abhinav is definitely smiling at his screen. 🌸🥺`;
   } else {
-    funnyInsight = "Exactly tied at the same percentage! Pure telepathic connection. 🔮✨";
+    funnyInsight = "Exactly tied at the exact same percentage! Pure telepathic connection. 🔮✨";
   }
 
   return {

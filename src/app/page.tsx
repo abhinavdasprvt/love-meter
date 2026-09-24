@@ -21,7 +21,7 @@ import AnimatedPercentage from "@/components/AnimatedPercentage";
 import DynamicMessageDisplay from "@/components/DynamicMessage";
 import PetalParticles from "@/components/PetalParticles";
 import AuthModal from "@/components/AuthModal";
-import LoveAnalysisModal from "@/components/LoveAnalysisModal";
+import LoveAnalysisModal, { LoveAnalysisCard } from "@/components/LoveAnalysisModal";
 import FunnyInteractions from "@/components/FunnyInteractions";
 import HistoryGraph from "@/components/HistoryGraph";
 
@@ -367,20 +367,28 @@ function HomeContent() {
           {!isBoth && <FunnyInteractions person={activePerson} />}
         </motion.div>
 
-        {/* Right Column (or Stacked on Mobile): LOVE LATELY Graph */}
+        {/* Right Column (or Stacked on Mobile): HistoryGraph for individual or LoveAnalysisCard for Both */}
         <motion.div
-          key={`graph-${activePerson}`}
+          key={`panel-${activePerson}`}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.1, ease: "easeOut" }}
           className="w-full max-w-sm sm:max-w-md flex flex-col items-center"
         >
-          <HistoryGraph
-            updates={currentHistory}
-            person={activePerson}
-            theme={isBoth ? "pink" : isAbhinav ? "blue" : "pink"}
-            className="w-full shadow-sm"
-          />
+          {isBoth ? (
+            <LoveAnalysisCard
+              abhinavUpdate={abhinavUpdate}
+              truptiUpdate={truptiUpdate}
+              onOpenFullModal={() => setIsAnalysisModalOpen(true)}
+            />
+          ) : (
+            <HistoryGraph
+              updates={currentHistory}
+              person={activePerson}
+              theme={isAbhinav ? "blue" : "pink"}
+              className="w-full shadow-sm"
+            />
+          )}
         </motion.div>
       </div>
 

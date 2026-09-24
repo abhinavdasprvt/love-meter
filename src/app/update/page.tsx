@@ -69,8 +69,17 @@ function UpdatePageContent() {
 
   const isAbhinav = person === "abhinav";
 
+  // Sync person from URL query parameter if present
   useEffect(() => {
-    if (!isUserAuthenticated()) {
+    const p = searchParams.get("person") as Person | null;
+    if (p && (p === "abhinav" || p === "trupti" || p === "both")) {
+      setPerson(p);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const role = getAuthenticatedRole();
+    if (!role || (role !== "admin" && role !== person)) {
       setIsAuthModalOpen(true);
     }
 

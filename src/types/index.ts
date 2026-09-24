@@ -1,4 +1,4 @@
-export type Person = "abhinav" | "trupti";
+export type Person = "abhinav" | "trupti" | "both";
 
 export interface LoveUpdate {
   id: string;
@@ -20,6 +20,25 @@ export function getDynamicMessage(
   person: Person = "trupti"
 ): DynamicMessage {
   const rounded = Math.round(percentage * 10) / 10;
+
+  if (person === "both") {
+    if (rounded >= 95) {
+      return {
+        text: "Cosmic Harmony! Perfectly in love 💕✨",
+        subtext: "Both of your hearts are beating in complete sync.",
+      };
+    }
+    if (rounded >= 80) {
+      return {
+        text: "Sweet Harmony! Truly meant to be 🌸🪐",
+        subtext: "A match made in heaven, loving each other more each day.",
+      };
+    }
+    return {
+      text: "Growing closer with every heartbeat 💖",
+      subtext: "Two souls writing the prettiest love story together.",
+    };
+  }
 
   if (person === "abhinav") {
     if (rounded === 0) {

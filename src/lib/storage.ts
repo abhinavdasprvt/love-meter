@@ -26,12 +26,18 @@ const SEED_DATA: LoveUpdate[] = [
 ];
 
 function normalizeRow(row: any): LoveUpdate {
-  const isAbhinav =
+  let person: Person = "trupti";
+  if (
     row.person === "abhinav" ||
     row.updated_by === ABHINAV_UUID ||
-    (typeof row.message === "string" && row.message.startsWith("[abhinav]"));
-
-  const person: Person = isAbhinav ? "abhinav" : "trupti";
+    (typeof row.message === "string" && row.message.startsWith("[abhinav]"))
+  ) {
+    person = "abhinav";
+  } else if (row.person === "both") {
+    person = "both";
+  } else {
+    person = "trupti";
+  }
   let cleanMessage = row.message;
 
   if (typeof cleanMessage === "string") {
@@ -286,6 +292,7 @@ export async function saveLoveUpdate(
             message: dbMsg,
             updated_at: now,
             updated_by: targetUuid,
+            person: person,
           })
           .eq("id", todayEntry.id)
           .select()
@@ -309,6 +316,7 @@ export async function saveLoveUpdate(
             created_at: now,
             updated_at: now,
             updated_by: targetUuid,
+            person: person,
           })
           .select()
           .single();

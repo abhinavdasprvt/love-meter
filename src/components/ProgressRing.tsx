@@ -7,7 +7,7 @@ interface ProgressRingProps {
   percentage: number;
   size?: number;
   strokeWidth?: number;
-  theme?: "pink" | "blue";
+  theme?: "pink" | "blue" | "purple";
   children?: React.ReactNode;
 }
 
@@ -25,10 +25,16 @@ export default function ProgressRing({
   const offset = circumference - (clamped / 100) * circumference;
   const isComplete = clamped === 100;
 
-  const strokeColor = theme === "blue" ? "#4A88E8" : "#D88C9A";
-  const trackColor = theme === "blue" ? "#C3DDF7" : "#EBC7CE";
+  const strokeColor =
+    theme === "blue" ? "#4A88E8" : theme === "purple" ? "#9333EA" : "#D88C9A";
+  const trackColor =
+    theme === "blue" ? "#C3DDF7" : theme === "purple" ? "#E9D5FF" : "#EBC7CE";
   const glowColor =
-    theme === "blue" ? "rgba(74,136,232,0.6)" : "rgba(216,140,154,0.6)";
+    theme === "blue"
+      ? "rgba(74,136,232,0.6)"
+      : theme === "purple"
+      ? "rgba(147,51,234,0.6)"
+      : "rgba(216,140,154,0.6)";
 
   return (
     <div

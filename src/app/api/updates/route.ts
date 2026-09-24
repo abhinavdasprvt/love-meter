@@ -34,11 +34,19 @@ function isSameCalendarDay(d1: Date, d2: Date): boolean {
 }
 
 function parseRowToLoveUpdate(row: any): LoveUpdate {
-  const isAbhinav =
+  let person: Person = "trupti";
+  if (
+    row.person === "abhinav" ||
     row.updated_by === ABHINAV_UUID ||
-    (typeof row.message === "string" && row.message.startsWith("[abhinav]"));
+    (typeof row.message === "string" && row.message.startsWith("[abhinav]"))
+  ) {
+    person = "abhinav";
+  } else if (row.person === "both") {
+    person = "both";
+  } else {
+    person = "trupti";
+  }
 
-  const person: Person = isAbhinav ? "abhinav" : "trupti";
   let cleanMessage = row.message;
 
   if (typeof cleanMessage === "string") {

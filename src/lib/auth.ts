@@ -1,5 +1,5 @@
 export type AuthRole = "abhinav" | "trupti" | "admin" | null;
-export type Person = "abhinav" | "trupti";
+export type Person = "abhinav" | "trupti" | "both";
 
 const DEFAULT_ABHINAV_PIN = "2305";
 const DEFAULT_TRUPTI_PIN = "1603";

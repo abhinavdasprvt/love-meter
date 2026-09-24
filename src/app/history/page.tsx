@@ -23,10 +23,12 @@ import PetalParticles from "@/components/PetalParticles";
 
 function HistoryPageContent() {
   const searchParams = useSearchParams();
-  const initialPerson = searchParams.get("person") as Person | null;
+  const rawPerson = searchParams.get("person");
+  const initialFilter: "all" | "abhinav" | "trupti" =
+    rawPerson === "abhinav" || rawPerson === "trupti" ? rawPerson : "all";
 
   const [activeFilter, setActiveFilter] = useState<"all" | "abhinav" | "trupti">(
-    initialPerson || "all"
+    initialFilter
   );
   const [updates, setUpdates] = useState<LoveUpdate[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);

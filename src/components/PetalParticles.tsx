@@ -36,6 +36,13 @@ const BLUE_COLORS = [
   "rgba(224, 242, 254, 0.55)", // Crystalline ice shimmer
 ];
 
+const BOTH_COLORS = [
+  "rgba(216, 140, 154, 0.35)", // Soft rose
+  "rgba(74, 136, 232, 0.32)",  // Celestial sky blue
+  "rgba(168, 85, 247, 0.35)",  // Soft lavender
+  "rgba(247, 219, 224, 0.4)",  // Whisper pink
+];
+
 export default function PetalParticles({
   isSpecial = false,
   theme,
@@ -60,9 +67,15 @@ export default function PetalParticles({
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
     };
+
     window.addEventListener("resize", handleResize);
 
-    const colors = activeTheme === "blue" ? BLUE_COLORS : PINK_COLORS;
+    const colors =
+      person === "both"
+        ? BOTH_COLORS
+        : activeTheme === "blue"
+        ? BLUE_COLORS
+        : PINK_COLORS;
     const count = isSpecial ? 30 : 14;
     const particles: Particle[] = [];
 

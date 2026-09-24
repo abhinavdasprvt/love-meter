@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MaintenanceConfig, DEFAULT_MAINTENANCE_CONFIG } from "@/types";
 
-// In-memory server cache
+// In-memory server cache (disabled by default, managed via /admin)
 let serverMaintenanceConfig: MaintenanceConfig = {
   ...DEFAULT_MAINTENANCE_CONFIG,
-  enabled: process.env.NEXT_PUBLIC_MAINTENANCE_MODE !== "false",
+  enabled: process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true",
 };
 
 export async function GET() {

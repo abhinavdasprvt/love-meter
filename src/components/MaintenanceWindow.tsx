@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -10,10 +9,7 @@ import {
   RefreshCw,
   CheckCircle2,
   Clock,
-  ShieldCheck,
   Heart,
-  ChevronRight,
-  Sliders,
 } from "lucide-react";
 import { MaintenanceConfig, DEFAULT_MAINTENANCE_CONFIG } from "@/types";
 import {
@@ -93,55 +89,9 @@ export default function MaintenanceWindow({ onBypassChange }: MaintenanceWindowP
     }
   };
 
-  const handleRelock = () => {
-    setMaintenanceBypass(false);
-    setIsBypassed(false);
-    if (onBypassChange) onBypassChange(false);
-  };
-
-  // If maintenance is completely disabled, don't show window
-  if (hasCheckedInit && !config.enabled) {
+  // If maintenance is completely disabled, or if user is authenticated/bypassed, don't show anything
+  if (!config.enabled || isBypassed) {
     return null;
-  }
-
-  // If bypassed, show floating admin status pill at top
-  if (isBypassed) {
-    return (
-      <div className="z-50 fixed top-3 left-1/2 -translate-x-1/2 w-[92%] max-w-md pointer-events-auto">
-        <motion.div
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between gap-2.5 px-3.5 py-2 rounded-full bg-[#242124]/90 text-white backdrop-blur-md shadow-lg border border-[#EBC7CE]/30 text-xs"
-        >
-          <div className="flex items-center gap-2 truncate">
-            <span className="relative flex h-2 w-2 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D88C9A] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D88C9A]"></span>
-            </span>
-            <span className="truncate text-[11px] font-medium text-[#FFF7F8]">
-              Maintenance Window Active (Bypassed)
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            <Link
-              href="/admin"
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#D88C9A] hover:bg-[#C97B89] text-[10px] font-semibold text-white tracking-wide transition-colors"
-            >
-              <Sliders size={10} />
-              <span>Admin</span>
-            </Link>
-            <button
-              onClick={handleRelock}
-              title="Lock Maintenance Window"
-              className="px-2 py-1 rounded-full text-[10px] text-[#EBC7CE] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-            >
-              Re-lock
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    );
   }
 
   // Active Maintenance Window Overlay

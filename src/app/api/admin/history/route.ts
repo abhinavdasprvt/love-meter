@@ -12,7 +12,6 @@ const serviceRoleKey =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
   DEFAULT_SUPABASE_ANON_KEY;
 
-
 function getAdminClient() {
   if (!supabaseUrl || !serviceRoleKey) return null;
   return createClient(supabaseUrl, serviceRoleKey, {
@@ -23,12 +22,12 @@ function getAdminClient() {
   });
 }
 
-
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const clearAll = searchParams.get("all") === "true";
+    const person = searchParams.get("person");
 
     const adminClient = getAdminClient();
     if (!adminClient) {
@@ -39,12 +38,17 @@ export async function DELETE(req: NextRequest) {
     }
 
     if (clearAll) {
-      // Delete all records
-      const { data, error } = await adminClient
-        .from("love_updates")
-        .delete()
-        .gte("percentage", 0)
-        .select();
+      // Delete records, respecting person if specified
+      let query = adminClient.from("love_updates").delete();
+      if (person === "abhinav") {
+        query = query.or("person.eq.abhinav,updated_by.eq.00000000-0000-0000-0000-000000000001,message.like.[abhinav]%");
+      } else if (person === "trupti") {
+        query = query.eq("person", "trupti");
+      } else {
+        query = query.gte("percentage", 0);
+      }
+
+      const { data, error } = await query.select();
 
       if (error) {
         console.error("Supabase clear error:", error);

@@ -11,50 +11,6 @@ interface HistoryGraphProps {
   className?: string;
 }
 
-// Baseline data points for Abhinav if fewer than 2 entries are present in database
-const ABHINAV_DEFAULT_POINTS: LoveUpdate[] = [
-  {
-    id: "seed-a1",
-    percentage: 91.0,
-    message: "Falling in love with you more every second ✨",
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    person: "abhinav",
-  },
-  {
-    id: "seed-a2",
-    percentage: 93.5,
-    message: "Thinking of your sweet smile today 💙",
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    person: "abhinav",
-  },
-  {
-    id: "seed-a3",
-    percentage: 94.0,
-    message: "Can never stop missing you my girl 🥺💙",
-    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    person: "abhinav",
-  },
-  {
-    id: "seed-a4",
-    percentage: 95.5,
-    message: "You make my whole world so beautiful 🪐",
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-    person: "abhinav",
-  },
-  {
-    id: "seed-a5",
-    percentage: 96.5,
-    message: "You're my entire galaxy 💙",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    person: "abhinav",
-  },
-];
-
 export default function HistoryGraph({
   updates,
   person,
@@ -72,17 +28,7 @@ export default function HistoryGraph({
   const activeTheme = theme || (person === "abhinav" ? "blue" : "pink");
   const isAbhinav = activeTheme === "blue";
 
-  // If updates array has fewer than 2 entries, provide fallback points so graph always renders
-  let displayUpdates = updates;
-  if (!displayUpdates || displayUpdates.length < 2) {
-    if (isAbhinav) {
-      if (displayUpdates && displayUpdates.length === 1) {
-        displayUpdates = [...ABHINAV_DEFAULT_POINTS.slice(0, 4), displayUpdates[0]];
-      } else {
-        displayUpdates = ABHINAV_DEFAULT_POINTS;
-      }
-    }
-  }
+  const displayUpdates = updates;
 
   if (!displayUpdates || displayUpdates.length < 2) {
     return null;

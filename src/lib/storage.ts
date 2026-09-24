@@ -114,21 +114,15 @@ export async function fetchAllUpdates(person?: Person): Promise<LoveUpdate[]> {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
           const normalized = json.data.map(normalizeRow);
-          if (normalized.length > 0) {
-            // Merge into local cache
-            const current = getLocalData().filter(
-              (u) => !person || u.person !== person
-            );
-            saveLocalData([...normalized, ...current]);
-            return normalized;
+          // If a specific person was requested, replace only that person's records in cache
+          // If all was requested, replace entire cache with server truth
+          if (person) {
+            const others = getLocalData().filter((u) => u.person !== person);
+            saveLocalData([...normalized, ...others]);
           } else {
-            const wasCleared =
-              localStorage.getItem("trupti_history_cleared") === "true";
-            if (wasCleared) return [];
-            return person
-              ? SEED_DATA.filter((s) => s.person === person)
-              : SEED_DATA;
+            saveLocalData(normalized);
           }
+          return normalized;
         }
       }
     } catch (apiErr) {
@@ -383,17 +377,49 @@ export async function saveLoveUpdate(
 export async function deleteSingleUpdate(
   id: string
 ): Promise<{ success: boolean; error?: string }> {
+  // If it's a seed item
+  if (id.startsWith("seed-")) {
+    const current = getLocalData();
+    saveLocalData(current.filter((u) => u.id !== id));
+    return { success: true };
+  }
+
+  let serverErr: string | undefined;
+
+  // 1. Try server admin delete endpoint
   try {
     const res = await fetch(`/api/admin/history?id=${encodeURIComponent(id)}`, {
       method: "DELETE",
     });
-    if (!res.ok) {
-      console.warn("Server API delete status:", res.status);
+    if (res.ok) {
+      const data = await res.json();
+      if (!data.success) {
+        serverErr = data.error;
+      }
+    } else {
+      serverErr = `Server error ${res.status}`;
     }
-  } catch (e) {
+  } catch (e: any) {
+    serverErr = e.message;
     console.warn("Server delete API error:", e);
   }
 
+  // 2. Direct Supabase client fallback
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase
+        .from("love_updates")
+        .delete()
+        .eq("id", id);
+      if (!error) {
+        serverErr = undefined; // Succeeded via direct Supabase client
+      }
+    } catch (e) {
+      console.warn("Direct Supabase delete fallback error:", e);
+    }
+  }
+
+  // 3. Update local cache immediately
   try {
     const current = getLocalData();
     const filtered = current.filter((u) => u.id !== id);
@@ -401,10 +427,15 @@ export async function deleteSingleUpdate(
     if (filtered.length === 0 && typeof window !== "undefined") {
       localStorage.setItem("trupti_history_cleared", "true");
     }
-    return { success: true };
-  } catch {
-    return { success: false, error: "Could not delete this entry." };
+  } catch (e) {
+    console.warn("Local storage delete error:", e);
   }
+
+  if (serverErr) {
+    return { success: false, error: serverErr };
+  }
+
+  return { success: true };
 }
 
 export async function clearAllHistory(

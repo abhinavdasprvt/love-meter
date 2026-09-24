@@ -60,4 +60,14 @@ BEGIN
             USING (true)
             WITH CHECK (percentage >= 0 AND percentage <= 100);
     END IF;
+
+    -- Allow delete access for admin operations
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'love_updates' AND policyname = 'Allow delete access to love_updates'
+    ) THEN
+        CREATE POLICY "Allow delete access to love_updates"
+            ON public.love_updates FOR DELETE
+            USING (true);
+    END IF;
 END $$;
